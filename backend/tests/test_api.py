@@ -101,3 +101,86 @@ def test_delivery_day_elexon_failure_is_502(failing_client: TestClient) -> None:
     assert response.status_code == 502
     assert "Elexon" in response.json()["detail"]
     assert "cache-control" not in response.headers
+
+
+def test_accuracy_golden_15_jan_7_days(client: TestClient) -> None:
+    response = client.get("/api/accuracy", params={"date": "2026-01-15", "window": 7})
+
+    assert response.status_code == 200
+    assert response.headers["cache-control"] == CACHE_CONTROL
+    body = response.json()
+    assert body["period"] == {"from": "2026-01-07", "to": "2026-01-13", "days": 7}
+    assert body["previousPeriod"] == {"from": "2025-12-31", "to": "2026-01-06", "days": 6}
+    assert round(body["kpis"]["typicalErrorMw"]) == 2354
+    assert round(body["kpis"]["biasMw"]) == 1863
+    assert set(body["kpis"]) == {"typicalErrorMw", "biasMw", "trendMw", "previousTypicalErrorMw"}
+    assert len(body["hours"]) == 168
+    assert set(body["hours"][0]) == {"startTime", "forecastMw", "actualMw", "errorMw"}
+    assert body["hours"][0]["startTime"] == "2026-01-07T00:00:00Z"
+    assert set(body["leadTime"][0]) == {"fromHours", "toHours", "typicalErrorMw", "count"}
+
+
+def test_accuracy_hour_filter(client: TestClient) -> None:
+    body = client.get(
+        "/api/accuracy", params={"date": "2026-01-15", "window": 7, "hour": 18}
+    ).json()
+
+    assert [h["startTime"][11:] for h in body["hours"]] == ["18:00:00Z"] * 7
+
+
+@pytest.mark.parametrize(
+    ("params", "message"),
+    [
+        ({"date": "2026-02-02", "window": 7}, "2026-01-02"),
+        ({"date": "2026-01-15", "window": 10}, "7, 14 or 30"),
+        ({"date": "2026-01-15", "window": 7, "hour": 24}, "0 and 23"),
+        ({"date": "2026-01-15", "window": 7, "hour": -1}, "0 and 23"),
+    ],
+)
+def test_accuracy_bad_query_is_422(
+    client: TestClient, params: dict[str, str | int], message: str
+) -> None:
+    response = client.get("/api/accuracy", params=params)
+
+    assert response.status_code == 422
+    assert message in response.json()["detail"]
+    assert "cache-control" not in response.headers
+
+
+def test_accuracy_elexon_failure_is_502(failing_client: TestClient) -> None:
+    response = failing_client.get("/api/accuracy", params={"date": "2026-01-15", "window": 7})
+
+    assert response.status_code == 502
+    assert "Elexon" in response.json()["detail"]
+    assert "cache-control" not in response.headers
+
+
+def test_accuracy_window_without_data_is_502(client: TestClient) -> None:
+    # Window 25..31 Dec. The fixture actuals start on 1 Jan, so no hour can be scored.
+    response = client.get("/api/accuracy", params={"date": "2026-01-02", "window": 7})
+
+    assert response.status_code == 502
+    assert "2025-12-25" in response.json()["detail"]
+    assert "cache-control" not in response.headers
+
+
+def test_delivery_day_without_pre_cutoff_forecast_is_502() -> None:
+    for test_client in _client_with(FakeElexonClient(forecasts=[])):
+        response = test_client.get("/api/delivery-day", params={"date": "2026-01-15"})
+
+        assert response.status_code == 502
+        assert "no wind forecast" in response.json()["detail"]
+        assert "cache-control" not in response.headers
+
+
+def test_repeated_accuracy_request_does_not_refetch() -> None:
+    elexon = FakeElexonClient()
+    for test_client in _client_with(elexon):
+        params = {"date": "2026-01-15", "window": 7}
+        first = test_client.get("/api/accuracy", params=params).json()
+        calls = elexon.calls
+
+        second = test_client.get("/api/accuracy", params=params).json()
+
+        assert elexon.calls == calls
+        assert second == first

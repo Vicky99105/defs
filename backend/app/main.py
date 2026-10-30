@@ -3,7 +3,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import delivery_day, meta
+from app.api.routes import accuracy, delivery_day, meta
 
 DEFAULT_ALLOWED_ORIGINS = "http://localhost:5173"
 
@@ -22,3 +22,4 @@ app.add_middleware(
 )
 app.include_router(meta.router)
 app.include_router(delivery_day.router)
+app.include_router(accuracy.router)
