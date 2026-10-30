@@ -14,6 +14,7 @@ import { StateCard } from '../components/ui/StateCard'
 import { useAccuracy, useDeliveryDay, useMeta } from '../hooks/useDashboardData'
 import { useUrlFilters, WINDOW_OPTIONS } from '../hooks/useUrlFilters'
 import { ApiError, type Accuracy, type DeliveryDay } from '../lib/api'
+import { clearSession } from '../lib/session'
 import {
   formatCalendarDate,
   formatCalendarDateLong,
@@ -54,7 +55,11 @@ function errorText(error: unknown): string {
   return 'Elexon is unavailable. Try again.'
 }
 
-export function Dashboard() {
+export type DashboardProps = {
+  username: string
+}
+
+export function Dashboard({ username }: DashboardProps) {
   const [filters, setFilters] = useUrlFilters()
   const meta = useMeta()
   const min = meta.data?.minDeliveryDate
@@ -103,7 +108,13 @@ export function Dashboard() {
 
   return (
     <div className="min-h-screen lg:flex">
-      <Sidebar filters={filterControls} facts={facts} footer={<AppFooter updatedAt={updatedAt} stacked />} />
+      <Sidebar
+        filters={filterControls}
+        facts={facts}
+        footer={<AppFooter updatedAt={updatedAt} stacked />}
+        username={username}
+        onSignOut={clearSession}
+      />
 
       <div className="min-w-0 flex-1">
         <AppHeader deliveryLabel={formatCalendarDateLong(date)} decisionLabel={decisionLabel} />

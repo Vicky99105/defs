@@ -3,6 +3,11 @@ services:
     build: ./backend
     ports:
       - "8000:8000"
+    # AUTH_USERNAME, AUTH_PASSWORD_HASH and AUTH_SECRET for sign-in. Optional, so the
+    # stack still starts without it; the protected routes then answer 503.
+    env_file:
+      - path: .env
+        required: false
     environment:
       ALLOWED_ORIGINS: http://localhost:5173
 

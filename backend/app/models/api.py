@@ -81,3 +81,13 @@ class AccuracyResponse(ApiModel):
 
 class ErrorResponse(ApiModel):
     detail: str
+
+
+class LoginRequest(ApiModel):
+    username: str
+    password: str
+
+
+class LoginResponse(ApiModel):
+    token: str
+    expires_at: datetime

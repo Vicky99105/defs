@@ -3,17 +3,28 @@ from collections.abc import Iterator
 import pytest
 from fastapi.testclient import TestClient
 
-from app.api.deps import get_elexon_client
+from app.api.deps import get_auth_service, get_elexon_client
 from app.main import app
+from app.services.auth.contract import AuthConfig
+from app.services.auth.service import DefaultAuthService, hash_password
 from tests.fakes.elexon import FakeElexonClient
 
-CACHE_CONTROL = "public, s-maxage=86400, stale-while-revalidate=604800"
+PUBLIC_CACHE_CONTROL = "public, s-maxage=86400, stale-while-revalidate=604800"
+PRIVATE_CACHE_CONTROL = "private, max-age=3600"
+
+
+# A low iteration count keeps the suite fast. The values are test-only.
+_auth = DefaultAuthService(
+    AuthConfig("analyst", hash_password("test-password", iterations=1_000), "t" * 32)
+)
+_token = _auth.sign_in("analyst", "test-password").token
 
 
 def _client_with(fake: FakeElexonClient) -> Iterator[TestClient]:
     app.dependency_overrides[get_elexon_client] = lambda: fake
+    app.dependency_overrides[get_auth_service] = lambda: _auth
     try:
-        yield TestClient(app)
+        yield TestClient(app, headers={"Authorization": f"Bearer {_token}"})
     finally:
         app.dependency_overrides.clear()
 
@@ -39,14 +50,14 @@ def test_meta(client: TestClient) -> None:
         "timeZone": "Europe/London",
         "windowsDays": [7, 14, 30],
     }
-    assert response.headers["cache-control"] == CACHE_CONTROL
+    assert response.headers["cache-control"] == PUBLIC_CACHE_CONTROL
 
 
 def test_delivery_day_15_jan(client: TestClient) -> None:
     response = client.get("/api/delivery-day", params={"date": "2026-01-15"})
 
     assert response.status_code == 200
-    assert response.headers["cache-control"] == CACHE_CONTROL
+    assert response.headers["cache-control"] == PRIVATE_CACHE_CONTROL
     body = response.json()
     assert body["deliveryDate"] == "2026-01-15"
     assert body["decisionTime"] == "2026-01-14T11:00:00Z"
@@ -107,7 +118,7 @@ def test_accuracy_golden_15_jan_7_days(client: TestClient) -> None:
     response = client.get("/api/accuracy", params={"date": "2026-01-15", "window": 7})
 
     assert response.status_code == 200
-    assert response.headers["cache-control"] == CACHE_CONTROL
+    assert response.headers["cache-control"] == PRIVATE_CACHE_CONTROL
     body = response.json()
     assert body["period"] == {"from": "2026-01-07", "to": "2026-01-13", "days": 7}
     assert body["previousPeriod"] == {"from": "2025-12-31", "to": "2026-01-06", "days": 6}

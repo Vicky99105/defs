@@ -9,7 +9,31 @@ All data is fetched live from the Elexon BMRS API. There is no database.
 
 **Live app:** https://wind-desk-one.vercel.app (API: https://wind-desk-api-theta.vercel.app/api/meta)
 
+**Sign-in:** the app and its data endpoints sit behind a username and password. Reviewer credentials are supplied with the submission, not in this repo.
+
+## The screen
+
+- **Sidebar:** delivery date (step a day at a time or open the calendar), delivery hour, and error history of 7, 14 or 30 days. Below the filters: which forecast version was used, how many earlier versions exist, and the history window. The signed-in user and sign-out sit at the bottom.
+- **Header:** the delivery day and the decision time it serves (11:00 UK on the day before).
+- **Forecast track record:** three tiles. Typical error, forecast bias and error trend, each with a hover definition.
+- **Wind forecast:** the decision forecast for the delivery day with every earlier version behind it. Click an hour to focus every chart on it.
+- **Past errors, forecast vs actual, error by lead time:** where the errors came from, each with a one-line reading underneath.
+
 ## How to start
+
+### Sign-in setup (needed for the data endpoints)
+
+The API reads one user from three environment variables. Nothing is stored in a database.
+
+| Variable | Value |
+|---|---|
+| `AUTH_USERNAME` | The username. |
+| `AUTH_PASSWORD_HASH` | A PBKDF2-SHA256 hash. Make one with `cd backend && uv run python -m app.services.auth.hash_password`, which prompts for the password and prints only the hash. |
+| `AUTH_SECRET` | A random string of at least 32 characters that signs the tokens, e.g. `python3 -c "import secrets; print(secrets.token_urlsafe(48))"`. |
+
+For local runs, put them in a `.env` file at the repo root (gitignored). Docker Compose loads it automatically; without Docker, export them in the API's shell. Without these variables, sign-in answers 503 and the data endpoints stay closed.
+
+The hash contains `$` characters, so wrap each value in single quotes, e.g. `AUTH_PASSWORD_HASH='pbkdf2_sha256$600000$...'`. Docker Compose and the shell then both read it literally.
 
 ### With Docker
 
@@ -52,6 +76,7 @@ cd ui && pnpm exec tsc -b && pnpm lint && pnpm build
 ```
 backend/                     Python 3.12, FastAPI. Deployed as its own Vercel project.
   app/main.py                App, CORS, routers.
+  app/api/auth.py            The bearer-token check shared by the data routes.
   app/api/routes/            Thin HTTP handlers: meta, delivery_day, accuracy.
   app/api/deps.py            The only place that wires implementations to contracts.
   app/integrations/elexon/   ElexonClient contract + DefaultElexonClient (httpx, 7-day chunks fetched in parallel).
@@ -60,14 +85,17 @@ backend/                     Python 3.12, FastAPI. Deployed as its own Vercel pr
     forecast_selection/      The decision rule: latest publish at or before 11:00 UK on D-1.
     delivery_day/            Decision forecast, earlier versions, peak, low, biggest revision.
     accuracy/                Typical error, bias, trend, per-hour errors, lead-time buckets.
+    auth/                    One configured user: PBKDF2 password check, HMAC-signed expiring tokens.
   app/models/                Domain types and camelCase API response models.
   tests/                     pytest through contracts and HTTP, using FakeElexonClient.
 ui/                          React, Vite, TypeScript, Tailwind v4, ECharts. Own Vercel project.
+  src/App.tsx                Shows the sign-in page or the dashboard, depending on the session.
+  src/routes/SignIn.tsx      Username and password form.
   src/routes/Dashboard.tsx   Page composition and loading, empty and error states.
-  src/components/            Grouped by feature: shell, filters, kpis, delivery-forecast,
+  src/components/            Grouped by feature: shell (sidebar, header), filters, kpis, delivery-forecast,
                              past-errors, forecast-vs-actual, lead-time, ui (shared primitives).
   src/hooks/                 Data queries (TanStack Query), URL filter state, theme.
-  src/lib/                   API types and client, formatting, chart styling, observations.
+  src/lib/                   API client, session store, formatting, chart styling, observations.
 data/                        Raw January 2026 Elexon JSON. Test fixtures only; the app never reads it.
 docker-compose.yml           Runs backend and ui together.
 .github/workflows/ci.yml     Validate (backend, ui, docker smoke test), then deploy.
@@ -77,13 +105,25 @@ Each service has a `contract.py` (a `Protocol`) and a `service.py` (`Default*` i
 
 ## API
 
-| Endpoint | Returns |
-|---|---|
-| `GET /api/meta` | Allowed delivery dates, decision time, time zone, history windows |
-| `GET /api/delivery-day?date=2026-01-15` | Decision forecast (24 hourly points), earlier pre-cutoff versions, peak, low, biggest revision |
-| `GET /api/accuracy?date=2026-01-15&window=7&hour=18` | Period and previous period, KPIs, per-hour errors, lead-time buckets. `hour` is optional. |
+| Endpoint | Auth | Returns |
+|---|---|---|
+| `POST /api/auth/login` | none | `{"token", "expiresAt"}` for a correct `{"username", "password"}`. The token lasts 12 hours. |
+| `GET /api/meta` | none | Allowed delivery dates, decision time, time zone, history windows |
+| `GET /api/delivery-day?date=2026-01-15` | bearer | Decision forecast (24 hourly points), earlier pre-cutoff versions, peak, low, biggest revision |
+| `GET /api/accuracy?date=2026-01-15&window=7&hour=18` | bearer | Period and previous period, KPIs, per-hour errors, lead-time buckets. `hour` is optional. |
 
-Errors: 422 for invalid input, 404 when a history window has no data, 502 when Elexon fails. Past-data responses carry `Cache-Control: public, s-maxage=86400, stale-while-revalidate=604800`.
+Bearer endpoints need `Authorization: Bearer <token>`.
+
+Errors:
+- 401: wrong credentials, or a missing, invalid or expired token.
+- 503: sign-in is not configured.
+- 422: invalid input.
+- 404: a history window has no data.
+- 502: Elexon fails.
+
+Caching:
+- `/api/meta` carries `Cache-Control: public, s-maxage=86400, stale-while-revalidate=604800`.
+- Data responses are `private, max-age=3600`. A shared CDN copy would be served to callers without a token, so only the browser caches them.
 
 ## Method and assumptions
 
@@ -96,15 +136,22 @@ Errors: 422 for invalid input, 404 when a history window has no data, 502 when E
 - **Why these metrics:** the IEA Wind Task 36 Recommended Practice names MAE as the primary metric for trading and lists MAE and bias as the baseline set; grid operators (NESO, ISO-NE) report the same pair. Percent-of-hours and percentile tiles were considered and dropped because no trader-facing product uses them.
 - **Golden numbers** (tested): delivery 15 Jan, 7-day window, all hours: 168 hours, typical error 2,354 MW, bias 1,863 MW.
 
+## Authentication
+
+- **Why no database:** there is one reviewer account, so the user lives in environment variables. The password is stored only as a PBKDF2-SHA256 hash with 600,000 iterations and a random salt.
+- **Tokens:** sign-in returns a stateless token, the username and expiry signed with HMAC-SHA256. The API checks the signature and expiry on every data request, so it needs no session table. Tokens last 12 hours.
+- **Browser:** the UI keeps the token in `sessionStorage`, so closing the tab signs out. Any 401 returns to the sign-in page. The UI and API are on different domains, so a bearer header is used instead of a cookie, which browsers increasingly block across sites.
+- **Limits:** there is no rate limiting on sign-in, and no way to revoke a single token before it expires. Rotating `AUTH_SECRET` signs everyone out.
+
 ## Known limits
 
 - National wind only, Elexon only, by design. No demand, price or capacity data, so errors are in MW rather than % of capacity.
-- The cache is in-process. On Vercel each warm instance keeps its own cache; the CDN cache headers cover repeat requests.
+- The cache is in-process. On Vercel each warm instance keeps its own cache. Data responses are private to the browser, so the CDN no longer shares them.
 - The UI bundle includes ECharts (about 183 kB gzip), loaded lazily after the first paint.
 
 ## Deployment
 
-Two Vercel projects: `wind-desk-api` from `backend/` (FastAPI, detected via `[tool.vercel] entrypoint` in `pyproject.toml`) and `wind-desk` from `ui/` (Vite, with `VITE_API_BASE` set to the API URL). The API's `ALLOWED_ORIGINS` is set to the UI URL. CI deploys only after every validation job passes. The deploy job needs these GitHub secrets: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID_API`, `VERCEL_PROJECT_ID_UI`. Without them, the job skips the deploy step.
+Two Vercel projects, both live: `wind-desk-api` from `backend/` (FastAPI, detected via `[tool.vercel] entrypoint` in `pyproject.toml`) and `wind-desk` from `ui/` (Vite, with `VITE_API_BASE` set to the API URL). The API's `ALLOWED_ORIGINS` is set to the UI URL, and the three `AUTH_*` variables are set on the API project. The CI deploy job runs only after every validation job passes. It needs four GitHub secrets: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID_API`, `VERCEL_PROJECT_ID_UI`. They are not set yet, so the job skips the deploy step. The current deployments were made directly through the Vercel API.
 
 ## Use of AI tools
 

@@ -1,8 +1,10 @@
 """Composition root: the only module that names implementation classes.
 
-Tests replace get_elexon_client through app.dependency_overrides.
+Tests replace get_elexon_client and get_auth_service through app.dependency_overrides.
 """
 
+import os
+from functools import cache
 from typing import Annotated
 
 from fastapi import Depends
@@ -11,6 +13,8 @@ from app.integrations.elexon.client import DefaultElexonClient
 from app.integrations.elexon.contract import ElexonClient
 from app.services.accuracy.contract import AccuracyService
 from app.services.accuracy.service import DefaultAccuracyService
+from app.services.auth.contract import AuthService
+from app.services.auth.service import DefaultAuthService, load_auth_config
 from app.services.delivery_day.contract import DeliveryDayService
 from app.services.delivery_day.service import DefaultDeliveryDayService
 from app.services.forecast_selection.contract import ForecastSelectionService
@@ -55,3 +59,9 @@ def get_accuracy_service(
     selection: Annotated[ForecastSelectionService, Depends(get_forecast_selection)],
 ) -> AccuracyService:
     return DefaultAccuracyService(wind_data, selection)
+
+
+@cache
+def get_auth_service() -> AuthService:
+    """Built on first use, so the app still starts when AUTH_* is not set."""
+    return DefaultAuthService(load_auth_config(os.environ))

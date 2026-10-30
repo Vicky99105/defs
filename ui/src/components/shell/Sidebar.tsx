@@ -11,6 +11,30 @@ export type SidebarProps = {
   facts: SidebarFact[] | null
   /** Data source line pinned to the bottom on desktop. */
   footer: ReactNode
+  /** Signed-in username, shown with a sign-out button. */
+  username: string
+  onSignOut: () => void
+}
+
+function SignOutButton({ onSignOut }: { onSignOut: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onSignOut}
+      className="inline-flex h-7 items-center gap-1.5 rounded-md border border-line bg-surface px-2.5 text-[12px] font-medium text-ink-2 transition-colors hover:border-line-strong hover:text-ink"
+    >
+      <svg viewBox="0 0 16 16" className="size-3.5" fill="none" aria-hidden="true">
+        <path
+          d="M6.5 3H4a1.5 1.5 0 0 0-1.5 1.5v7A1.5 1.5 0 0 0 4 13h2.5M10 5.5 12.5 8 10 10.5M12.5 8H6"
+          stroke="currentColor"
+          strokeWidth="1.3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+      Sign out
+    </button>
+  )
 }
 
 function SectionLabel({ children }: { children: ReactNode }) {
@@ -18,7 +42,7 @@ function SectionLabel({ children }: { children: ReactNode }) {
 }
 
 /** App rail: brand, filters and decision facts. Becomes a top block below lg. */
-export function Sidebar({ filters, facts, footer }: SidebarProps) {
+export function Sidebar({ filters, facts, footer, username, onSignOut }: SidebarProps) {
   return (
     <aside
       aria-label="Filters"
@@ -32,8 +56,9 @@ export function Sidebar({ filters, facts, footer }: SidebarProps) {
             <span className="text-[11px] text-ink-3">GB day-ahead wind</span>
           </span>
         </a>
-        <div className="ml-auto lg:hidden">
+        <div className="ml-auto flex items-center gap-2 lg:hidden">
           <ThemeToggle />
+          <SignOutButton onSignOut={onSignOut} />
         </div>
       </div>
 
@@ -64,7 +89,21 @@ export function Sidebar({ filters, facts, footer }: SidebarProps) {
         </div>
       </div>
 
-      <div className="hidden border-t border-line px-5 py-4 lg:block">{footer}</div>
+      <div className="hidden border-t border-line px-5 py-4 lg:block">
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <span className="flex min-w-0 items-center gap-2">
+            <span
+              className="grid size-7 shrink-0 place-items-center rounded-full bg-accent-soft text-[12px] font-semibold text-accent-text uppercase"
+              aria-hidden="true"
+            >
+              {username.slice(0, 1)}
+            </span>
+            <span className="truncate text-[12.5px] font-medium text-ink">{username}</span>
+          </span>
+          <SignOutButton onSignOut={onSignOut} />
+        </div>
+        {footer}
+      </div>
     </aside>
   )
 }

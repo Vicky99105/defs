@@ -3,7 +3,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 
-from app.api.cache import set_past_data_cache
+from app.api.auth import require_user
+from app.api.cache import set_private_cache
 from app.api.deps import get_delivery_day_service
 from app.integrations.elexon.contract import ElexonError
 from app.models.api import DeliveryDayResponse, ErrorResponse
@@ -19,7 +20,12 @@ router = APIRouter()
 @router.get(
     "/api/delivery-day",
     response_model=DeliveryDayResponse,
-    responses={422: {"model": ErrorResponse}, 502: {"model": ErrorResponse}},
+    dependencies=[Depends(require_user)],
+    responses={
+        401: {"model": ErrorResponse},
+        422: {"model": ErrorResponse},
+        502: {"model": ErrorResponse},
+    },
 )
 async def delivery_day(
     response: Response,
@@ -34,5 +40,5 @@ async def delivery_day(
         raise HTTPException(status_code=502, detail=f"Elexon is unavailable: {exc}") from exc
     except NoForecastAvailable as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
-    set_past_data_cache(response)
+    set_private_cache(response)
     return result
