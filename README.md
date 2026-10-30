@@ -7,7 +7,7 @@ A dashboard for a UK energy utility's day-ahead trading team. Before the 11:00 G
 
 All data is fetched live from the Elexon BMRS API. There is no database.
 
-**Live app:** _pending Vercel deployment (see "Deployment" below)_
+**Live app:** https://wind-desk-one.vercel.app (API: https://wind-desk-api-theta.vercel.app/api/meta)
 
 ## How to start
 
@@ -104,7 +104,7 @@ Errors: 422 for invalid input, 404 when a history window has no data, 502 when E
 
 ## Deployment
 
-Two Vercel projects: `backend/` (FastAPI, detected via `[tool.vercel] entrypoint` in `pyproject.toml`) and `ui/` (Vite, with `VITE_API_BASE` set to the API URL). CI deploys only after every validation job passes. The deploy job needs these GitHub secrets: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID_API`, `VERCEL_PROJECT_ID_UI`. Without them, the job skips the deploy step.
+Two Vercel projects: `wind-desk-api` from `backend/` (FastAPI, detected via `[tool.vercel] entrypoint` in `pyproject.toml`) and `wind-desk` from `ui/` (Vite, with `VITE_API_BASE` set to the API URL). The API's `ALLOWED_ORIGINS` is set to the UI URL. CI deploys only after every validation job passes. The deploy job needs these GitHub secrets: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID_API`, `VERCEL_PROJECT_ID_UI`. Without them, the job skips the deploy step.
 
 ## Use of AI tools
 
