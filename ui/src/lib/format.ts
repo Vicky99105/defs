@@ -57,3 +57,60 @@ export function formatSignedMw(mw: number): string {
 export function formatGw(mw: number): string {
   return (mw / 1000).toFixed(1)
 }
+
+const hourNumberFormat = new Intl.DateTimeFormat('en-GB', {
+  timeZone: UK_TIME_ZONE,
+  hour: 'numeric',
+  hourCycle: 'h23',
+})
+
+const dayMonthYearFormat = new Intl.DateTimeFormat('en-GB', {
+  timeZone: UK_TIME_ZONE,
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+})
+
+/** UK delivery hour 0..23 for an ISO instant. */
+export function ukHour(iso: string): number {
+  return Number(hourNumberFormat.format(new Date(iso))) % 24
+}
+
+/** "18:00" for an hour number. */
+export function formatHour(hour: number): string {
+  return `${String(hour).padStart(2, '0')}:00`
+}
+
+/** "Thu 15 Jan 2026" for a calendar date "YYYY-MM-DD". */
+export function formatCalendarDateLong(date: string): string {
+  const d = new Date(`${date}T12:00:00Z`)
+  return `${weekdayFormat.format(d)} ${dayMonthYearFormat.format(d)}`
+}
+
+/** "7 Jan" for a calendar date "YYYY-MM-DD". */
+export function formatShortDate(date: string): string {
+  return dayMonthFormat.format(new Date(`${date}T12:00:00Z`))
+}
+
+/** "7 to 13 Jan 2026", or "31 Dec 2025 to 6 Jan 2026" across a year. */
+export function formatPeriod(from: string, to: string): string {
+  const a = new Date(`${from}T12:00:00Z`)
+  const b = new Date(`${to}T12:00:00Z`)
+  if (from === to) return dayMonthYearFormat.format(b)
+  const sameYear = a.getUTCFullYear() === b.getUTCFullYear()
+  const sameMonth = sameYear && a.getUTCMonth() === b.getUTCMonth()
+  const start = sameMonth ? String(a.getUTCDate()) : sameYear ? dayMonthFormat.format(a) : dayMonthYearFormat.format(a)
+  return `${start} to ${dayMonthYearFormat.format(b)}`
+}
+
+/** "+1.2" or "−1.2" GW with a true minus sign. */
+export function formatSignedGw(mw: number): string {
+  const gw = Math.round(mw / 100) / 10
+  const sign = gw > 0 ? '+' : gw < 0 ? '−' : ''
+  return `${sign}${Math.abs(gw).toFixed(1)}`
+}
+
+/** "12:04" in UK time for a millisecond timestamp. */
+export function formatClock(ms: number): string {
+  return hourFormat.format(new Date(ms))
+}

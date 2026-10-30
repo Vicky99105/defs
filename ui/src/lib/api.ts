@@ -40,6 +40,53 @@ export type DeliveryDay = {
   summary: DeliveryDaySummary
 }
 
+/** A run of whole delivery days, "YYYY-MM-DD", both ends inclusive. */
+export type Period = {
+  from: string
+  to: string
+  days: number
+}
+
+export type AccuracyKpis = {
+  /** Mean of |forecast - actual|. */
+  typicalErrorMw: number
+  /** Mean of (forecast - actual). Positive means the forecast ran above actual. */
+  biasMw: number
+  /** typicalErrorMw minus the previous period's. Null when there is no previous period. */
+  trendMw: number | null
+  previousTypicalErrorMw: number | null
+}
+
+export type AccuracyHour = {
+  startTime: string
+  forecastMw: number
+  actualMw: number
+  /** forecastMw - actualMw. Positive means the forecast ran above actual. */
+  errorMw: number
+}
+
+export type LeadTimeBucket = {
+  fromHours: number
+  toHours: number
+  typicalErrorMw: number
+  count: number
+}
+
+export type Accuracy = {
+  period: Period
+  previousPeriod: Period | null
+  kpis: AccuracyKpis
+  hours: AccuracyHour[]
+  leadTime: LeadTimeBucket[]
+}
+
+export type AccuracyParams = {
+  date: string
+  window: number
+  /** UK hour 0..23. Omit for all hours. */
+  hour?: number | null
+}
+
 export class ApiError extends Error {
   readonly status: number
 
@@ -73,4 +120,13 @@ export function fetchMeta(signal?: AbortSignal): Promise<Meta> {
 
 export function fetchDeliveryDay(date: string, signal?: AbortSignal): Promise<DeliveryDay> {
   return getJson<DeliveryDay>(`/api/delivery-day?date=${encodeURIComponent(date)}`, signal)
+}
+
+export function fetchAccuracy(
+  { date, window, hour }: AccuracyParams,
+  signal?: AbortSignal,
+): Promise<Accuracy> {
+  const query = new URLSearchParams({ date, window: String(window) })
+  if (hour != null) query.set('hour', String(hour))
+  return getJson<Accuracy>(`/api/accuracy?${query.toString()}`, signal)
 }

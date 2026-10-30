@@ -1,96 +1,138 @@
 import { useMemo } from 'react'
+import { useChartTheme } from '../../hooks/useTheme'
 import type { ForecastSeries } from '../../lib/api'
+import { axisStyle, CHART_FONT, gwTick, tooltipRow, tooltipStyle, tooltipTitle } from '../../lib/chartStyle'
 import type { EChartsCoreOption } from '../../lib/echarts'
-import { formatMw, formatPublishTime, formatUkTime } from '../../lib/format'
+import { formatMw, formatPublishTime, formatUkTime, ukHour } from '../../lib/format'
 import { EChart } from '../ui/EChart'
 
 export type ForecastChartProps = {
-  /** The decision-time forecast: bold blue line. */
+  /** The decision forecast: bold accent line. */
   latest: ForecastSeries
-  /** Versions published before the decision time, oldest first: faint grey lines. */
+  /** Versions published before the decision time: faint neutral lines. */
   earlier: ForecastSeries[]
+  /** Selected UK hour, marked with a subtle vertical rule. */
+  selectedHour: number | null
+  /** Click on an hour: select it, or clear it when it is already selected. */
+  onHourClick: (hour: number) => void
 }
 
-// Canvas cannot read CSS variables, so the mockup tokens are repeated here.
-const COLORS = {
-  forecast: '#2563eb',
-  old: 'rgba(100, 116, 139, 0.35)',
-  muted: '#64748b',
-  line: '#e2e8f0',
-} as const
+type AxisParam = { dataIndex: number }
 
-const EARLIER_NAME = 'Earlier forecasts'
+export default function ForecastChart({ latest, earlier, selectedHour, onHourClick }: ForecastChartProps) {
+  const t = useChartTheme()
+  const hours = useMemo(() => latest.points.map((p) => ukHour(p.startTime)), [latest])
 
-const axisStyle = {
-  axisLabel: { color: COLORS.muted },
-  axisLine: { lineStyle: { color: COLORS.line } },
-  splitLine: { lineStyle: { color: COLORS.line } },
-}
-
-type TooltipParam = { seriesName?: string; axisValue?: string; value?: number | null }
-
-export function ForecastChart({ latest, earlier }: ForecastChartProps) {
   const option = useMemo<EChartsCoreOption>(() => {
-    const hours = latest.points.map((p) => p.startTime)
-    const latestName = `Latest forecast (${formatPublishTime(latest.publishTime)})`
+    const times = latest.points.map((p) => p.startTime)
     const valuesFor = (series: ForecastSeries) => {
-      const byHour = new Map(series.points.map((p) => [p.startTime, p.mw]))
-      return hours.map((h) => byHour.get(h) ?? null)
+      const byTime = new Map(series.points.map((p) => [p.startTime, p.mw]))
+      return times.map((time) => {
+        const mw = byTime.get(time)
+        return mw == null ? null : mw / 1000
+      })
     }
+    const ordered = [...earlier].sort((a, b) => a.publishTime.localeCompare(b.publishTime))
+    const selectedIndex = selectedHour === null ? -1 : hours.indexOf(selectedHour)
+    const axis = axisStyle(t)
 
     return {
       animation: false,
-      grid: { left: 56, right: 16, top: 36, bottom: 44 },
+      textStyle: { fontFamily: CHART_FONT },
+      grid: { left: 8, right: 12, top: 16, bottom: 4, containLabel: true },
       tooltip: {
         trigger: 'axis',
-        formatter: (params: TooltipParam[]) => {
-          const p = params.find((x) => x.seriesName === latestName)
-          return p && p.value != null
-            ? `${p.axisValue}<br>Latest forecast: <b>${formatMw(p.value)} MW</b>`
-            : ''
+        ...tooltipStyle(t),
+        axisPointer: { type: 'line', lineStyle: { color: t.border, width: 1 } },
+        formatter: (params: AxisParam[]) => {
+          const index = params[0]?.dataIndex
+          if (index == null) return ''
+          const point = latest.points[index]
+          const firstVersion = ordered.find((s) => s.points.some((p) => p.startTime === point.startTime))
+          const first = firstVersion?.points.find((p) => p.startTime === point.startTime)
+          return (
+            tooltipTitle(t, `${formatUkTime(point.startTime)} delivery`) +
+            tooltipRow(t, t.accent, 'Decision forecast', `${formatMw(point.mw)} MW`) +
+            (first ? tooltipRow(t, t.earlier, `First, ${formatPublishTime(firstVersion!.publishTime)}`, `${formatMw(first.mw)} MW`) : '')
+          )
         },
       },
-      legend: { top: 0, data: [latestName, EARLIER_NAME] },
       xAxis: {
         type: 'category',
-        data: hours.map(formatUkTime),
-        name: 'delivery hour (UK time)',
-        nameLocation: 'middle',
-        nameGap: 26,
-        ...axisStyle,
+        boundaryGap: false,
+        data: times.map(formatUkTime),
+        ...axis,
+        axisLabel: { ...axis.axisLabel, interval: 2, margin: 10 },
+        splitLine: { show: false },
       },
-      yAxis: { type: 'value', name: 'MW', min: 0, ...axisStyle },
+      yAxis: {
+        type: 'value',
+        min: 0,
+        splitNumber: 4,
+        ...axis,
+        axisLine: { show: false },
+        axisLabel: { ...axis.axisLabel, formatter: (v: number) => `${gwTick(v)} GW` },
+      },
       series: [
         ...earlier.map((series) => ({
-          name: EARLIER_NAME,
           type: 'line',
           symbol: 'none',
           data: valuesFor(series),
-          color: COLORS.old,
+          color: t.earlier,
           lineStyle: { width: 1 },
           z: 1,
-          connectNulls: false,
           silent: true,
+          emphasis: { disabled: true },
         })),
         {
-          name: latestName,
           type: 'line',
-          symbol: 'circle',
-          symbolSize: 6,
           data: valuesFor(latest),
-          color: COLORS.forecast,
-          lineStyle: { width: 3 },
+          color: t.accent,
+          lineStyle: { width: 2.5, cap: 'round', join: 'round' },
+          showSymbol: false,
+          symbol: 'circle',
+          symbolSize: 8,
+          itemStyle: { borderColor: t.surface, borderWidth: 2 },
           z: 10,
+          emphasis: { scale: false },
+          markLine:
+            selectedIndex >= 0
+              ? {
+                  symbol: 'none',
+                  silent: true,
+                  animation: false,
+                  label: { show: false },
+                  lineStyle: { color: t.accentFaint, width: 1, type: 'solid' },
+                  data: [{ xAxis: selectedIndex }],
+                }
+              : undefined,
         },
+        ...(selectedIndex >= 0
+          ? [
+              {
+                type: 'scatter',
+                data: [[selectedIndex, latest.points[selectedIndex].mw / 1000]],
+                symbolSize: 10,
+                color: t.accent,
+                itemStyle: { borderColor: t.surface, borderWidth: 2 },
+                z: 20,
+                silent: true,
+              },
+            ]
+          : []),
       ],
     }
-  }, [latest, earlier])
+  }, [latest, earlier, hours, selectedHour, t])
 
   return (
     <EChart
       option={option}
-      className="h-[340px] w-full"
-      ariaLabel={`Wind forecast by delivery hour, latest published ${formatPublishTime(latest.publishTime)}, with ${earlier.length} earlier versions`}
+      className="h-[240px] w-full sm:h-[300px]"
+      ariaLabel={`Wind forecast by delivery hour. Decision forecast published ${formatPublishTime(latest.publishTime)}, with ${earlier.length} earlier versions.`}
+      onCategoryClick={(index) => {
+        const hour = hours[index]
+        if (hour !== undefined) onHourClick(hour)
+      }}
     />
   )
 }

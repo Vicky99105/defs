@@ -4,9 +4,10 @@ export type ObservationProps = {
   children: ReactNode
 }
 
+/** A one-line reading of the chart. Numbers inside <b> get the emphasis. */
 export function Observation({ children }: ObservationProps) {
   return (
-    <p className="mt-2 mb-0 rounded-md border-l-[3px] border-brand bg-obs-bg px-3 py-2 text-[13px] [&_b]:font-mono [&_b]:font-semibold">
+    <p className="num m-0 text-[12.5px] leading-5 text-ink-2 [&_b]:font-semibold [&_b]:text-ink">
       {children}
     </p>
   )

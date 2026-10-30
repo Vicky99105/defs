@@ -32,6 +32,6 @@ async def accuracy(
     except ElexonError as exc:
         raise HTTPException(status_code=502, detail=f"Elexon is unavailable: {exc}") from exc
     except NoAccuracyData as exc:
-        raise HTTPException(status_code=502, detail=str(exc)) from exc
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     set_past_data_cache(response)
     return result

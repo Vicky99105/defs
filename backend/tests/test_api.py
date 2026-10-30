@@ -155,11 +155,11 @@ def test_accuracy_elexon_failure_is_502(failing_client: TestClient) -> None:
     assert "cache-control" not in response.headers
 
 
-def test_accuracy_window_without_data_is_502(client: TestClient) -> None:
+def test_accuracy_window_without_data_is_404(client: TestClient) -> None:
     # Window 25..31 Dec. The fixture actuals start on 1 Jan, so no hour can be scored.
     response = client.get("/api/accuracy", params={"date": "2026-01-02", "window": 7})
 
-    assert response.status_code == 502
+    assert response.status_code == 404
     assert "2025-12-25" in response.json()["detail"]
     assert "cache-control" not in response.headers
 
