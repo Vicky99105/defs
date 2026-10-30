@@ -11,7 +11,9 @@ function messageFor(error: unknown): string {
 }
 
 const INPUT_CLASS =
-  'h-10 w-full rounded-lg border border-line bg-surface px-3 text-[14px] text-ink shadow-card transition-colors placeholder:text-ink-3 hover:border-line-strong focus-visible:border-accent'
+  'h-11 w-full rounded-[10px] border border-line bg-field px-3.5 text-[14px] text-ink transition-colors placeholder:text-ink-3 hover:border-line-strong focus-visible:border-accent'
+
+const POINTS = ['Latest Elexon forecast before the cutoff', 'Typical error, bias and trend', 'Where the misses come from']
 
 export function SignIn() {
   const userId = useId()
@@ -38,20 +40,46 @@ export function SignIn() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <div className="flex justify-end px-4 pt-4 sm:px-6">
-        <ThemeToggle />
-      </div>
+    <div className="grid min-h-screen lg:grid-cols-[minmax(420px,44%)_1fr]">
+      <section className="flex flex-col justify-between gap-10 bg-side px-6 py-8 text-side-ink sm:px-10 lg:px-12 lg:py-10">
+        <div className="flex items-center gap-3">
+          <WindMark className="size-9" />
+          <span className="flex flex-col leading-tight">
+            <span className="text-[15px] font-semibold tracking-[-0.01em]">Wind Desk</span>
+            <span className="text-[11px] tracking-[0.04em] text-side-muted">GB day-ahead wind</span>
+          </span>
+        </div>
 
-      <main className="flex flex-1 items-center justify-center px-4 pb-16">
-        <div className="w-full max-w-[380px]">
-          <div className="mb-6 flex flex-col items-center text-center">
-            <WindMark className="size-10" />
-            <h1 className="m-0 mt-4 text-[20px] font-semibold tracking-[-0.02em] text-ink">Sign in to Wind Desk</h1>
-            <p className="m-0 mt-1 text-[13px] text-ink-3">GB day-ahead wind forecast and its track record</p>
-          </div>
+        <div className="max-w-[400px]">
+          <p className="m-0 text-[11px] font-semibold tracking-[0.14em] text-gold uppercase">Before the 11:00 auction</p>
+          <h2 className="m-0 mt-3 text-[26px] leading-[1.25] font-semibold tracking-[-0.02em] sm:text-[30px]">
+            Know how far to trust tomorrow&apos;s wind forecast.
+          </h2>
+          <p className="m-0 mt-3 text-[14px] text-side-muted">
+            The forecast you have at decision time, and how wrong it has been lately.
+          </p>
+          <ul className="m-0 mt-6 hidden list-none flex-col gap-2.5 p-0 sm:flex">
+            {POINTS.map((point) => (
+              <li key={point} className="flex items-center gap-3 text-[13px]">
+                <span className="h-px w-4 bg-gold" aria-hidden="true" />
+                {point}
+              </li>
+            ))}
+          </ul>
+        </div>
 
-          <form onSubmit={onSubmit} noValidate className={`flex flex-col gap-4 p-6 ${SURFACE_CLASS}`}>
+        <p className="m-0 hidden text-[11.5px] text-side-muted lg:block">Data: Elexon BMRS · All times UK</p>
+      </section>
+
+      <main className="relative flex items-center justify-center px-4 py-12 sm:px-8">
+        <div className="absolute top-5 right-5 sm:right-8">
+          <ThemeToggle />
+        </div>
+        <div className="w-full max-w-[400px]">
+          <h1 className="m-0 text-[24px] font-semibold tracking-[-0.02em] text-ink">Sign in</h1>
+          <p className="m-0 mt-1 mb-6 text-[13.5px] text-ink-3">Use the reviewer credentials you were sent.</p>
+
+          <form onSubmit={onSubmit} noValidate className={`flex flex-col gap-4 p-6 sm:p-7 ${SURFACE_CLASS}`}>
             <div className="flex flex-col gap-1.5">
               <label htmlFor={userId} className="text-[12.5px] font-medium text-ink-2">
                 Username
@@ -104,7 +132,7 @@ export function SignIn() {
               <p
                 id={errorId}
                 role="alert"
-                className="m-0 rounded-lg border border-line bg-surface-2 px-3 py-2 text-[12.5px] text-above-text"
+                className="m-0 rounded-[10px] border border-line bg-field px-3 py-2 text-[12.5px] text-above-text"
               >
                 {error}
               </p>
@@ -113,14 +141,14 @@ export function SignIn() {
             <button
               type="submit"
               disabled={pending || username.trim() === '' || password === ''}
-              className="mt-1 h-10 rounded-lg bg-accent text-[14px] font-medium text-white shadow-card transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              className="mt-1 h-11 rounded-[10px] bg-accent text-[14px] font-medium text-on-accent transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {pending ? 'Signing in…' : 'Sign in'}
             </button>
           </form>
 
           <p className="m-0 mt-5 text-center text-[12px] text-ink-3">
-            Access is limited to invited reviewers. Your session ends when you close the tab.
+            Access is by invitation only. Your session ends when you close the tab.
           </p>
         </div>
       </main>

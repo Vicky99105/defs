@@ -10,10 +10,29 @@ const OPTIONS: { value: ThemePreference; label: string; icon: string }[] = [
   { value: 'system', label: 'System theme', icon: 'M2.5 3.5h11v7.5h-11zM6 13.5h4M8 11v2.5' },
 ]
 
-export function ThemeToggle() {
+export type ThemeToggleProps = {
+  /** "side" for the dark sidebar, "page" for the light main area. */
+  tone?: 'page' | 'side'
+}
+
+const TONES = {
+  page: {
+    group: 'border-line bg-surface',
+    on: 'bg-bg text-ink shadow-[0_1px_2px_rgb(0_0_0/0.08)]',
+    off: 'text-ink-3 hover:text-ink',
+  },
+  side: {
+    group: 'border-side-line bg-side-raised',
+    on: 'bg-side-line text-side-ink',
+    off: 'text-side-muted hover:text-side-ink',
+  },
+}
+
+export function ThemeToggle({ tone = 'page' }: ThemeToggleProps) {
+  const style = TONES[tone]
   const { preference } = useTheme()
   return (
-    <div role="radiogroup" aria-label="Theme" className="flex h-7 items-center rounded-md border border-line bg-surface-2 p-0.5">
+    <div role="radiogroup" aria-label="Theme" className={`flex h-7 items-center rounded-md border p-0.5 ${style.group}`}>
       {OPTIONS.map((option) => {
         const active = option.value === preference
         return (
@@ -26,7 +45,7 @@ export function ThemeToggle() {
             title={option.label}
             onClick={() => setThemePreference(option.value)}
             className={`grid h-full w-7 place-items-center rounded-[5px] transition-colors ${
-              active ? 'bg-surface text-ink shadow-[0_1px_2px_rgb(0_0_0/0.08),0_0_0_1px_var(--border)]' : 'text-ink-3 hover:text-ink'
+              active ? style.on : style.off
             }`}
           >
             <svg viewBox="0 0 16 16" className="size-3.5" fill="none" aria-hidden="true">

@@ -9,7 +9,7 @@ export function AppFooter({ updatedAt, stacked = false }: AppFooterProps) {
   const items = ['Elexon BMRS: FUELHH, WINDFOR', 'All times UK', `Fetched live${updatedAt ? `, ${updatedAt}` : ''}`]
   if (stacked) {
     return (
-      <footer className="num flex flex-col gap-1 text-[11.5px] text-ink-3">
+      <footer className="num flex flex-col gap-1 text-[11px] leading-5 text-side-muted">
         {items.map((item) => (
           <span key={item}>{item}</span>
         ))}

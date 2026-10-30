@@ -1,77 +1,96 @@
 @import 'tailwindcss';
 
 /*
- * Design tokens. Cool neutrals carry the UI; one accent hue (blue) marks the decision forecast,
- * active controls, focus rings and the "similar hours" dots. Red, green and amber appear
- * only where they carry meaning. Charts read these tokens at runtime (lib/chartTheme.ts).
+ * Design tokens: "Forest & Gilt". A dark forest-green rail, a warm parchment main area, and
+ * cards a shade deeper than the page. Forest green marks the decision forecast and active
+ * controls; gilt is a thin accent (rules, the selected window, the perfect-forecast line).
+ * Terracotta and slate blue appear only for above and below actual. Charts read these tokens
+ * at runtime (hooks/useTheme.ts).
  */
 :root {
   color-scheme: light;
-  --bg: #f4f5f7;
-  --surface: #ffffff;
-  --surface-2: #f8f9fb;
-  --surface-hover: #f1f2f5;
-  --border: #e5e7eb;
-  --border-strong: #d3d6dc;
-  --text: #111318;
-  --text-2: #474c57;
-  --text-3: #6b717d;
-  --grid: #eceef2;
-  --accent: #2563eb;
-  --accent-text: #1d4ed8;
-  --accent-soft: rgb(37 99 235 / 0.08);
-  --accent-faint: rgb(37 99 235 / 0.26);
-  --earlier: rgb(100 106 120 / 0.3);
-  --neutral-dot: rgb(100 106 120 / 0.34);
-  --above: #e5484d;
-  --below: #12a594;
-  --amber: #e2860d;
-  --above-text: #ce2c31;
-  --below-text: #0d7d6f;
-  --skeleton: #eceef2;
-  --shadow: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.03);
-  --tooltip-bg: #ffffff;
+  --bg: #f7f4ec;
+  --surface: #ece6d7;
+  --surface-2: #e4dcca;
+  --surface-hover: #e6dfcf;
+  --field: #f7f4ec;
+  --border: #dcd3bf;
+  --border-strong: #c9bea6;
+  --text: #1f2a23;
+  --text-2: #46534a;
+  --text-3: #69766d;
+  --grid: #d9d0bb;
+  --accent: #2f5e48;
+  --accent-text: #2a5541;
+  --accent-soft: rgb(47 94 72 / 0.12);
+  --accent-faint: rgb(47 94 72 / 0.28);
+  --on-accent: #f3f1e8;
+  --gold: #b8923f;
+  --earlier: rgb(105 118 109 / 0.34);
+  --neutral-dot: rgb(105 118 109 / 0.4);
+  --above: #b25a3c;
+  --below: #4c7f8a;
+  --amber: #b8923f;
+  --above-text: #9a4a2f;
+  --below-text: #3b6a74;
+  --skeleton: #e2dac8;
+  --shadow: inset 0 1px 0 rgb(255 255 255 / 0.55), 0 1px 2px rgb(40 30 10 / 0.05);
+  --tooltip-bg: #f7f4ec;
+  --side: #16211b;
+  --side-raised: #213029;
+  --side-border: #2f4038;
+  --side-text: #eef0e8;
+  --side-muted: #9cab9f;
 }
 
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --bg: #0b0c0f;
-  --surface: #131519;
-  --surface-2: #171a1f;
-  --surface-hover: #1d2026;
-  --border: #24272e;
-  --border-strong: #33373f;
-  --text: #ecedf0;
-  --text-2: #b2b6bf;
-  --text-3: #868b96;
-  --grid: #1e2127;
-  --accent: #5b8def;
-  --accent-text: #7ea6f4;
-  --accent-soft: rgb(91 141 239 / 0.13);
-  --accent-faint: rgb(91 141 239 / 0.3);
-  --earlier: rgb(160 166 178 / 0.26);
-  --neutral-dot: rgb(160 166 178 / 0.32);
-  --above: #e5484d;
-  --below: #1fb89f;
-  --amber: #e2930d;
-  --above-text: #ff6b6f;
-  --below-text: #3fd1b4;
-  --skeleton: #1d2026;
+  --bg: #111813;
+  --surface: #18221c;
+  --surface-2: #1d2922;
+  --surface-hover: #223028;
+  --field: #111813;
+  --border: #29362e;
+  --border-strong: #36463c;
+  --text: #ecefe6;
+  --text-2: #b9c2b8;
+  --text-3: #8f9a91;
+  --grid: #26322b;
+  --accent: #74b391;
+  --accent-text: #88c5a3;
+  --accent-soft: rgb(116 179 145 / 0.14);
+  --accent-faint: rgb(116 179 145 / 0.3);
+  --on-accent: #0d1410;
+  --gold: #d2ab5a;
+  --earlier: rgb(160 172 163 / 0.26);
+  --neutral-dot: rgb(160 172 163 / 0.32);
+  --above: #d0734f;
+  --below: #6aa6b3;
+  --amber: #d2ab5a;
+  --above-text: #e58c6a;
+  --below-text: #84bcc8;
+  --skeleton: #222e27;
   --shadow: 0 1px 2px rgb(0 0 0 / 0.35);
-  --tooltip-bg: #1a1d22;
+  --tooltip-bg: #1d2922;
+  --side: #0b110d;
+  --side-raised: #151e18;
+  --side-border: #233029;
+  --side-text: #e6eae1;
+  --side-muted: #8e9a91;
 }
 
 /* Before the app sets data-theme (first paint), follow the OS setting. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
     color-scheme: dark;
-    --bg: #0b0c0f;
-    --surface: #131519;
-    --border: #24272e;
-    --text: #ecedf0;
-    --text-2: #b2b6bf;
-    --text-3: #868b96;
-    --skeleton: #1d2026;
+    --bg: #111813;
+    --surface: #18221c;
+    --border: #29362e;
+    --text: #ecefe6;
+    --text-2: #b9c2b8;
+    --text-3: #8f9a91;
+    --skeleton: #222e27;
+    --side: #0b110d;
   }
 }
 
@@ -91,6 +110,14 @@
   --color-above-text: var(--above-text);
   --color-below-text: var(--below-text);
   --color-skeleton: var(--skeleton);
+  --color-field: var(--field);
+  --color-on-accent: var(--on-accent);
+  --color-gold: var(--gold);
+  --color-side: var(--side);
+  --color-side-raised: var(--side-raised);
+  --color-side-line: var(--side-border);
+  --color-side-ink: var(--side-text);
+  --color-side-muted: var(--side-muted);
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --shadow-card: var(--shadow);
 }

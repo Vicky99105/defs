@@ -23,7 +23,7 @@ function StepButton({ dir, disabled, onClick }: { dir: -1 | 1; disabled: boolean
       onClick={onClick}
       disabled={disabled}
       aria-label={dir < 0 ? 'Previous day' : 'Next day'}
-      className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-line bg-surface text-ink-2 shadow-card transition-colors hover:border-line-strong hover:text-ink disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-line"
+      className="grid h-10 w-10 shrink-0 place-items-center rounded-[10px] border border-side-line bg-side-raised text-side-muted transition-colors hover:border-side-muted hover:text-side-ink disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-side-line"
     >
       <svg viewBox="0 0 16 16" className="size-3.5" fill="none" aria-hidden="true">
         <path
@@ -58,7 +58,7 @@ export function DeliveryDatePicker({ value, min, max, onChange }: DeliveryDatePi
             className={`${CONTROL_CLASS} num flex items-center justify-between gap-2 text-left font-medium`}
           >
             <span className="truncate">{formatCalendarDate(value)}</span>
-            <svg viewBox="0 0 16 16" className="size-3.5 shrink-0 text-ink-3" fill="none" aria-hidden="true">
+            <svg viewBox="0 0 16 16" className="size-3.5 shrink-0 text-side-muted" fill="none" aria-hidden="true">
               <rect x="2.5" y="3.5" width="11" height="10" rx="2" stroke="currentColor" strokeWidth="1.3" />
               <path d="M2.5 6.5h11M5.5 2v2.5M10.5 2v2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
             </svg>

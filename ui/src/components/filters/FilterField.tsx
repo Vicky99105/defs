@@ -7,15 +7,15 @@ export type FilterFieldProps = {
   children: ReactNode
 }
 
-/** A filter group: small uppercase label, optional quiet hint, then the control. */
+/** A filter group on the dark sidebar: a quiet label, optional hint, then the control. */
 export function FilterField({ label, htmlFor, hint, children }: FilterFieldProps) {
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
       <div className="flex items-baseline justify-between gap-2">
-        <label htmlFor={htmlFor} className="text-[10.5px] font-semibold tracking-[0.06em] text-ink-3 uppercase">
+        <label htmlFor={htmlFor} className="text-[12px] text-side-muted">
           {label}
         </label>
-        {hint ? <span className="text-[11px] text-ink-3">{hint}</span> : null}
+        {hint ? <span className="text-[11px] text-side-muted opacity-80">{hint}</span> : null}
       </div>
       {children}
     </div>
@@ -24,4 +24,4 @@ export function FilterField({ label, htmlFor, hint, children }: FilterFieldProps
 
 /** Shared look for inputs and selects. */
 export const CONTROL_CLASS =
-  'h-9 w-full rounded-lg border border-line bg-surface px-3 text-[13px] text-ink shadow-card transition-colors hover:border-line-strong focus-visible:border-accent'
+  'h-10 w-full rounded-[10px] border border-side-line bg-side-raised px-3 text-[13.5px] font-medium text-side-ink transition-colors hover:border-side-muted focus-visible:border-gold'

@@ -30,7 +30,7 @@ export function HourSelect({ value, onChange }: HourSelectProps) {
         </select>
         <svg
           viewBox="0 0 16 16"
-          className="pointer-events-none absolute top-1/2 right-2.5 size-3.5 -translate-y-1/2 text-ink-3"
+          className="pointer-events-none absolute top-1/2 right-3 size-3.5 -translate-y-1/2 text-side-muted"
           fill="none"
           aria-hidden="true"
         >
