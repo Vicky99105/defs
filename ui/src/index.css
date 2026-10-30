@@ -1,0 +1,23 @@
+@import 'tailwindcss';
+
+/* Colour tokens from the approved mockup (docs/mockups/ui-mockup.html). */
+@theme {
+  --color-bg: #f6f7f9;
+  --color-surface: #ffffff;
+  --color-ink: #0f172a;
+  --color-muted: #64748b;
+  --color-line: #e2e8f0;
+  --color-brand: #0f766e;
+  --color-forecast: #2563eb;
+  --color-old: rgba(100, 116, 139, 0.35);
+  --color-obs-bg: #f8fafc;
+  --font-sans: Inter, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font: 14px/1.5 var(--font-sans);
+}

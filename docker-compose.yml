@@ -1,0 +1,18 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      ALLOWED_ORIGINS: http://localhost:5173
+
+  ui:
+    build:
+      context: ./ui
+      args:
+        # The browser calls the API, so this is the host-side URL, not the compose service name.
+        VITE_API_BASE: http://localhost:8000
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
