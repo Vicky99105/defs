@@ -4,8 +4,9 @@ import { HourSelect } from '../components/filters/HourSelect'
 import { WindowToggle } from '../components/filters/WindowToggle'
 import { KpiStrip } from '../components/kpis/KpiStrip'
 import { AppFooter } from '../components/shell/AppFooter'
-import { AppHeader, DecisionPill } from '../components/shell/AppHeader'
-import { Card } from '../components/ui/Card'
+import { AppHeader } from '../components/shell/AppHeader'
+import { Sidebar, type SidebarFact } from '../components/shell/Sidebar'
+import { Card, SURFACE_CLASS } from '../components/ui/Card'
 import { Legend } from '../components/ui/Legend'
 import { Observation } from '../components/ui/Observation'
 import { CardSkeleton, ChartSkeleton, Skeleton } from '../components/ui/Skeleton'
@@ -40,10 +41,10 @@ const PastErrorsChart = lazy(() => import('../components/past-errors/PastErrorsC
 const ScatterChart = lazy(() => import('../components/forecast-vs-actual/ScatterChart'))
 const LeadTimeChart = lazy(() => import('../components/lead-time/LeadTimeChart'))
 
-const HERO_HEIGHT = 'h-[240px] sm:h-[300px]'
+const HERO_HEIGHT = 'h-[240px] sm:h-[320px]'
 const CARD_HEIGHT = 'h-[240px]'
 
-/** The backend answers 502 with this wording when the window has no forecast/actual pairs. */
+/** The backend answers 404 when the window has no forecast/actual pairs. */
 function isNoHistory(error: unknown): boolean {
   return error instanceof ApiError && error.status === 404
 }
@@ -89,27 +90,26 @@ export function Dashboard() {
     </>
   )
 
+  const facts: SidebarFact[] | null = day.data
+    ? [
+        { label: 'Forecast used', value: formatPublishTime(day.data.latest.publishTime) },
+        { label: 'Earlier versions', value: String(day.data.earlier.length) },
+        ...(accuracy.data
+          ? [{ label: 'Error history', value: formatPeriod(accuracy.data.period.from, accuracy.data.period.to) }]
+          : []),
+      ]
+    : null
+  const updatedAt = updated > 0 ? formatClock(updated) : null
+
   return (
-    <div className="min-h-screen">
-      <AppHeader deliveryLabel={formatCalendarDateLong(date)} decisionLabel={decisionLabel} />
+    <div className="min-h-screen lg:flex">
+      <Sidebar filters={filterControls} facts={facts} footer={<AppFooter updatedAt={updatedAt} stacked />} />
 
-      <div className="lg:flex">
-        <aside
-          aria-label="Filters"
-          className="border-b border-line bg-surface lg:sticky lg:top-14 lg:h-[calc(100vh-3.5rem)] lg:w-64 lg:shrink-0 lg:border-r lg:border-b-0 lg:bg-transparent"
-        >
-          <div className="grid grid-cols-1 gap-3 px-4 py-3 sm:grid-cols-3 sm:px-6 lg:flex lg:flex-col lg:gap-6 lg:px-5 lg:py-6">
-            {filterControls}
-          </div>
-        </aside>
+      <div className="min-w-0 flex-1">
+        <AppHeader deliveryLabel={formatCalendarDateLong(date)} decisionLabel={decisionLabel} />
 
-        <main className="min-w-0 flex-1 px-4 pt-5 pb-8 sm:px-6 lg:px-8 lg:pt-6">
+        <main className="px-4 pt-5 pb-8 sm:px-6 lg:px-8 lg:pt-6">
           <div className="mx-auto flex max-w-[1200px] flex-col gap-4 sm:gap-5">
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 md:hidden">
-              <p className="num m-0 text-[15px] font-semibold text-ink sm:hidden">{formatCalendarDateLong(date)}</p>
-              <DecisionPill label={decisionLabel} />
-            </div>
-
             {meta.error ? (
               <StateCard
                 tone="error"
@@ -140,10 +140,21 @@ export function Dashboard() {
               </>
             )}
 
-            <AppFooter updatedAt={updated > 0 ? formatClock(updated) : null} />
+            <div className="lg:hidden">
+              <AppFooter updatedAt={updatedAt} />
+            </div>
           </div>
         </main>
       </div>
+    </div>
+  )
+}
+
+function SectionHeading({ title, meta }: { title: string; meta?: ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 pt-1">
+      <h2 className="m-0 text-[14px] font-semibold tracking-[-0.01em] text-ink">{title}</h2>
+      {meta ? <span className="num text-[12px] text-ink-3">{meta}</span> : null}
     </div>
   )
 }
@@ -172,7 +183,7 @@ function AccuracySummary({ query, hour }: { query: QueryState<Accuracy>; hour: n
         <Skeleton className="h-3.5 w-56" />
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="rounded-xl border border-line bg-surface p-4 shadow-card sm:px-5">
+            <div key={i} className={`p-4 sm:px-5 ${SURFACE_CLASS}`}>
               <Skeleton className="h-3 w-24" />
               <Skeleton className="mt-3 h-7 w-20" />
               <Skeleton className="mt-2 h-3 w-32" />
@@ -185,11 +196,10 @@ function AccuracySummary({ query, hour }: { query: QueryState<Accuracy>; hour: n
   const { period, kpis, previousPeriod } = query.data
   return (
     <section aria-label="Accuracy summary" className="flex flex-col gap-3">
-      <p className="num m-0 text-[12px] text-ink-3">
-        Error history <span className="text-ink-2">{formatPeriod(period.from, period.to)}</span>
-        {' · '}
-        {hour === null ? 'All hours' : formatHour(hour)}
-      </p>
+      <SectionHeading
+        title="Forecast track record"
+        meta={`${formatPeriod(period.from, period.to)} · ${hour === null ? 'all hours' : formatHour(hour)}`}
+      />
       <Fade stale={query.isPlaceholderData}>
         <KpiStrip kpis={kpis} previousPeriod={previousPeriod} />
       </Fade>
@@ -220,7 +230,8 @@ function HeroCard({ query, hour, onHourClick, onClearHour, onRetry }: HeroCardPr
 
   return (
     <Card
-      title={`Wind forecast · ${formatCalendarDate(data.deliveryDate)}`}
+      title={`Wind forecast for ${formatCalendarDate(data.deliveryDate)}`}
+      subtitle="Elexon WINDFOR, every version published before the cutoff"
       aside={
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <Legend
@@ -336,6 +347,7 @@ function AccuracyCards({ query, allHours, day, hour, upstreamShown }: AccuracyCa
       <div className={GRID}>
         <Card
           title="Past errors"
+          subtitle={perDay ? 'Forecast minus actual, one bar per day' : 'Forecast minus actual, one bar per hour'}
           legend={
             <Legend
               items={[
@@ -361,6 +373,7 @@ function AccuracyCards({ query, allHours, day, hour, upstreamShown }: AccuracyCa
 
         <Card
           title="Forecast vs actual"
+          subtitle="Each dot is one past hour"
           legend={
             range ? (
               <Legend
@@ -405,6 +418,7 @@ function AccuracyCards({ query, allHours, day, hour, upstreamShown }: AccuracyCa
 
         <Card
           title="Error by lead time"
+          subtitle="Typical error by hours ahead of delivery"
           className={LAST_CARD}
           legend={
             <Legend

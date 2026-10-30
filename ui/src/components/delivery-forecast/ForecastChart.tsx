@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useChartTheme } from '../../hooks/useTheme'
 import type { ForecastSeries } from '../../lib/api'
-import { axisStyle, CHART_FONT, gwTick, tooltipRow, tooltipStyle, tooltipTitle } from '../../lib/chartStyle'
+import { axisStyle, CHART_FONT, fadeDown, gwTick, tooltipRow, tooltipStyle, tooltipTitle } from '../../lib/chartStyle'
 import type { EChartsCoreOption } from '../../lib/echarts'
 import { formatMw, formatPublishTime, formatUkTime, ukHour } from '../../lib/format'
 import { EChart } from '../ui/EChart'
@@ -39,11 +39,11 @@ export default function ForecastChart({ latest, earlier, selectedHour, onHourCli
     return {
       animation: false,
       textStyle: { fontFamily: CHART_FONT },
-      grid: { left: 8, right: 12, top: 16, bottom: 4, containLabel: true },
+      grid: { left: 4, right: 12, top: 12, bottom: 4, containLabel: true },
       tooltip: {
         trigger: 'axis',
         ...tooltipStyle(t),
-        axisPointer: { type: 'line', lineStyle: { color: t.border, width: 1 } },
+        axisPointer: { type: 'line', lineStyle: { color: t.text3, width: 1, type: [3, 3] } },
         formatter: (params: AxisParam[]) => {
           const index = params[0]?.dataIndex
           if (index == null) return ''
@@ -89,6 +89,7 @@ export default function ForecastChart({ latest, earlier, selectedHour, onHourCli
           data: valuesFor(latest),
           color: t.accent,
           lineStyle: { width: 2.5, cap: 'round', join: 'round' },
+          areaStyle: { color: fadeDown(t.accent, t.mode === 'dark' ? 0.16 : 0.12), origin: 'start' },
           showSymbol: false,
           symbol: 'circle',
           symbolSize: 8,
@@ -127,7 +128,7 @@ export default function ForecastChart({ latest, earlier, selectedHour, onHourCli
   return (
     <EChart
       option={option}
-      className="h-[240px] w-full sm:h-[300px]"
+      className="h-[240px] w-full sm:h-[320px]"
       ariaLabel={`Wind forecast by delivery hour. Decision forecast published ${formatPublishTime(latest.publishTime)}, with ${earlier.length} earlier versions.`}
       onCategoryClick={(index) => {
         const hour = hours[index]

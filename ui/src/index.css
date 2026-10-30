@@ -1,77 +1,77 @@
 @import 'tailwindcss';
 
 /*
- * Design tokens. Neutrals carry the UI; one accent hue (blue) marks the decision forecast,
+ * Design tokens. Cool neutrals carry the UI; one accent hue (blue) marks the decision forecast,
  * active controls, focus rings and the "similar hours" dots. Red, green and amber appear
  * only where they carry meaning. Charts read these tokens at runtime (lib/chartTheme.ts).
  */
 :root {
   color-scheme: light;
-  --bg: #f7f7f8;
+  --bg: #f4f5f7;
   --surface: #ffffff;
-  --surface-2: #fafafb;
-  --surface-hover: #f2f2f4;
-  --border: #e6e6e9;
-  --border-strong: #d6d6db;
-  --text: #17171c;
-  --text-2: #4b4b55;
-  --text-3: #6b6b76;
-  --grid: #efeff1;
+  --surface-2: #f8f9fb;
+  --surface-hover: #f1f2f5;
+  --border: #e5e7eb;
+  --border-strong: #d3d6dc;
+  --text: #111318;
+  --text-2: #474c57;
+  --text-3: #6b717d;
+  --grid: #eceef2;
   --accent: #2563eb;
   --accent-text: #1d4ed8;
-  --accent-soft: rgb(37 99 235 / 0.09);
-  --accent-faint: rgb(37 99 235 / 0.28);
-  --earlier: rgb(113 113 122 / 0.32);
-  --neutral-dot: rgb(113 113 122 / 0.38);
-  --above: #dc2626;
-  --below: #059669;
-  --amber: #d97706;
-  --above-text: #c81e1e;
-  --below-text: #047857;
-  --skeleton: #efeff2;
-  --shadow: 0 1px 2px rgb(16 16 20 / 0.04);
+  --accent-soft: rgb(37 99 235 / 0.08);
+  --accent-faint: rgb(37 99 235 / 0.26);
+  --earlier: rgb(100 106 120 / 0.3);
+  --neutral-dot: rgb(100 106 120 / 0.34);
+  --above: #e5484d;
+  --below: #12a594;
+  --amber: #e2860d;
+  --above-text: #ce2c31;
+  --below-text: #0d7d6f;
+  --skeleton: #eceef2;
+  --shadow: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.03);
   --tooltip-bg: #ffffff;
 }
 
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --bg: #0a0a0b;
-  --surface: #131315;
-  --surface-2: #161619;
-  --surface-hover: #1c1c20;
-  --border: #232327;
-  --border-strong: #303036;
-  --text: #ededf0;
-  --text-2: #b4b4bc;
-  --text-3: #8a8a94;
-  --grid: #1f1f23;
+  --bg: #0b0c0f;
+  --surface: #131519;
+  --surface-2: #171a1f;
+  --surface-hover: #1d2026;
+  --border: #24272e;
+  --border-strong: #33373f;
+  --text: #ecedf0;
+  --text-2: #b2b6bf;
+  --text-3: #868b96;
+  --grid: #1e2127;
   --accent: #5b8def;
   --accent-text: #7ea6f4;
-  --accent-soft: rgb(91 141 239 / 0.14);
+  --accent-soft: rgb(91 141 239 / 0.13);
   --accent-faint: rgb(91 141 239 / 0.3);
-  --earlier: rgb(161 161 170 / 0.28);
-  --neutral-dot: rgb(161 161 170 / 0.34);
+  --earlier: rgb(160 166 178 / 0.26);
+  --neutral-dot: rgb(160 166 178 / 0.32);
   --above: #e5484d;
-  --below: #14a37f;
-  --amber: #c98500;
+  --below: #1fb89f;
+  --amber: #e2930d;
   --above-text: #ff6b6f;
-  --below-text: #3ecf8e;
-  --skeleton: #1d1d21;
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.3);
-  --tooltip-bg: #1a1a1d;
+  --below-text: #3fd1b4;
+  --skeleton: #1d2026;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.35);
+  --tooltip-bg: #1a1d22;
 }
 
 /* Before the app sets data-theme (first paint), follow the OS setting. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
     color-scheme: dark;
-    --bg: #0a0a0b;
-    --surface: #131315;
-    --border: #232327;
-    --text: #ededf0;
-    --text-2: #b4b4bc;
-    --text-3: #8a8a94;
-    --skeleton: #1d1d21;
+    --bg: #0b0c0f;
+    --surface: #131519;
+    --border: #24272e;
+    --text: #ecedf0;
+    --text-2: #b2b6bf;
+    --text-3: #868b96;
+    --skeleton: #1d2026;
   }
 }
 

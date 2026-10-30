@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { SURFACE_CLASS } from './Card'
 
 export type StateCardProps = {
   tone: 'empty' | 'error'
@@ -13,7 +14,7 @@ export function StateCard({ tone, title, detail, action, className = '' }: State
   return (
     <div
       role={tone === 'error' ? 'alert' : 'status'}
-      className={`flex flex-col items-center justify-center gap-3 rounded-xl border border-line bg-surface px-6 py-12 text-center shadow-card ${className}`}
+      className={`flex flex-col items-center justify-center gap-3 px-6 py-12 text-center ${SURFACE_CLASS} ${className}`}
     >
       <span className="grid size-9 place-items-center rounded-full border border-line bg-surface-2 text-ink-3">
         {tone === 'error' ? (

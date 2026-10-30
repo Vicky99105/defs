@@ -24,4 +24,4 @@ export function FilterField({ label, htmlFor, hint, children }: FilterFieldProps
 
 /** Shared look for inputs and selects. */
 export const CONTROL_CLASS =
-  'h-8 w-full rounded-md border border-line bg-surface px-2.5 text-[13px] text-ink shadow-card transition-colors hover:border-line-strong focus-visible:border-accent'
+  'h-9 w-full rounded-lg border border-line bg-surface px-3 text-[13px] text-ink shadow-card transition-colors hover:border-line-strong focus-visible:border-accent'

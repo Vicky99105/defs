@@ -13,7 +13,7 @@ export function WindowToggle({ value, options, onChange }: WindowToggleProps) {
       <div
         role="radiogroup"
         aria-label="Error history window"
-        className="grid h-8 rounded-md border border-line bg-surface-2 p-0.5"
+        className="grid h-9 rounded-lg border border-line bg-surface-2 p-0.5"
         style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
       >
         {options.map((days) => {
@@ -25,7 +25,7 @@ export function WindowToggle({ value, options, onChange }: WindowToggleProps) {
               role="radio"
               aria-checked={active}
               onClick={() => onChange(days)}
-              className={`num rounded-[5px] text-[12.5px] font-medium transition-colors ${
+              className={`num rounded-md text-[12.5px] font-medium transition-colors ${
                 active
                   ? 'bg-surface text-accent-text shadow-[0_1px_2px_rgb(0_0_0/0.08),0_0_0_1px_var(--border)]'
                   : 'text-ink-3 hover:text-ink'

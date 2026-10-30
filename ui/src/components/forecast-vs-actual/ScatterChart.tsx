@@ -3,7 +3,7 @@ import { useChartTheme } from '../../hooks/useTheme'
 import type { AccuracyHour } from '../../lib/api'
 import { axisStyle, CHART_FONT, gwTick, tooltipRow, tooltipStyle, tooltipTitle } from '../../lib/chartStyle'
 import type { EChartsCoreOption } from '../../lib/echarts'
-import { formatMw, formatUkDay, formatUkTime } from '../../lib/format'
+import { formatGw, formatMw, formatUkDay, formatUkTime } from '../../lib/format'
 import { isSimilar, type SimilarRange } from '../../lib/insights'
 import { EChart } from '../ui/EChart'
 
@@ -39,7 +39,7 @@ export default function ScatterChart({ rows, range }: ScatterChartProps) {
     return {
       animation: false,
       textStyle: { fontFamily: CHART_FONT },
-      grid: { left: 8, right: 12, top: 18, bottom: 22, containLabel: true },
+      grid: { left: 4, right: 14, top: 26, bottom: 22, containLabel: true },
       tooltip: {
         trigger: 'item',
         ...tooltipStyle(t),
@@ -83,14 +83,19 @@ export default function ScatterChart({ rows, range }: ScatterChartProps) {
             lineStyle: { color: t.accent, type: [4, 4], width: 1 },
             label: {
               show: true,
-              position: 'insideEndTop',
-              color: t.text2,
+              position: 'end',
+              distance: 4,
+              color: t.accent,
+              fontWeight: 600,
               fontSize: 10,
               fontFamily: CHART_FONT,
               backgroundColor: t.surface,
               padding: [1, 4],
               borderRadius: 3,
-              formatter: (p: { dataIndex: number }) => range.markers[p.dataIndex]?.label ?? '',
+              formatter: (p: { dataIndex: number }) => {
+                const marker = range.markers[p.dataIndex]
+                return marker ? `${formatGw(marker.mw)} GW` : ''
+              },
             },
             data: range.markers.map((m) => ({ xAxis: m.mw / 1000 })),
           },
@@ -104,7 +109,7 @@ export default function ScatterChart({ rows, range }: ScatterChartProps) {
           symbol: 'none',
           silent: true,
           color: t.amber,
-          lineStyle: { width: 1.5 },
+          lineStyle: { width: 1.5, type: [6, 4] },
           z: 2,
         },
       ],

@@ -9,7 +9,7 @@ export type KpiStripProps = {
 
 function Arrow({ up, className }: { up: boolean; className: string }) {
   return (
-    <span className={`text-[15px] leading-8 ${className}`} aria-hidden="true">
+    <span className={`text-[15px] leading-9 ${className}`} aria-hidden="true">
       {up ? '▲' : '▼'}
     </span>
   )

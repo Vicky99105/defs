@@ -29,7 +29,7 @@ export default function PastErrorsChart({ rows, perDay }: PastErrorsChartProps) 
     return {
       animation: false,
       textStyle: { fontFamily: CHART_FONT },
-      grid: { left: 8, right: 8, top: 12, bottom: 22, containLabel: true },
+      grid: { left: 4, right: 8, top: 12, bottom: 22, containLabel: true },
       tooltip: {
         trigger: 'axis',
         ...tooltipStyle(t),

@@ -1,3 +1,5 @@
+import { SURFACE_CLASS } from './Card'
+
 export type SkeletonProps = {
   className?: string
 }
@@ -29,7 +31,7 @@ export type CardSkeletonProps = {
 export function CardSkeleton({ heightClass, className = '' }: CardSkeletonProps) {
   return (
     <div
-      className={`rounded-xl border border-line bg-surface p-4 shadow-card sm:p-5 ${className}`}
+      className={`p-4 sm:p-5 ${SURFACE_CLASS} ${className}`}
       aria-busy="true"
       aria-label="Loading"
     >

@@ -21,7 +21,7 @@ export default function LeadTimeChart({ buckets }: LeadTimeChartProps) {
     return {
       animation: false,
       textStyle: { fontFamily: CHART_FONT },
-      grid: { left: 8, right: 8, top: 12, bottom: 22, containLabel: true },
+      grid: { left: 4, right: 8, top: 12, bottom: 22, containLabel: true },
       tooltip: {
         trigger: 'axis',
         ...tooltipStyle(t),
@@ -61,7 +61,7 @@ export default function LeadTimeChart({ buckets }: LeadTimeChartProps) {
           barWidth: '52%',
           data: buckets.map((b) => ({
             value: b.typicalErrorMw / 1000,
-            itemStyle: { color: isBuyLead(b) ? t.accent : t.accentFaint, borderRadius: [3, 3, 0, 0] },
+            itemStyle: { color: isBuyLead(b) ? t.accent : t.accentFaint, borderRadius: [4, 4, 0, 0] },
           })),
         },
       ],
