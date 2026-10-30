@@ -46,7 +46,7 @@ export function DeliveryDatePicker({ value, min, max, onChange }: DeliveryDatePi
   const id = useId()
   const inputRef = useRef<HTMLInputElement>(null)
   return (
-    <FilterField label="Delivery date" htmlFor={id}>
+    <FilterField label="Date" htmlFor={id}>
       <div className="flex gap-1.5">
         <StepButton dir={-1} disabled={value <= min} onClick={() => onChange(shiftDate(value, -1))} />
         <div className="relative min-w-0 flex-1">

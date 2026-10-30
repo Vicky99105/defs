@@ -9,7 +9,7 @@ export type WindowToggleProps = {
 
 export function WindowToggle({ value, options, onChange }: WindowToggleProps) {
   return (
-    <FilterField label="Error history" hint="max 30 days">
+    <FilterField label="Window">
       <div
         role="radiogroup"
         aria-label="Error history window"

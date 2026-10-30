@@ -5,7 +5,7 @@ import { WindowToggle } from '../components/filters/WindowToggle'
 import { KpiStrip } from '../components/kpis/KpiStrip'
 import { AppFooter } from '../components/shell/AppFooter'
 import { AppHeader } from '../components/shell/AppHeader'
-import { Sidebar, type SidebarFact } from '../components/shell/Sidebar'
+import { Sidebar, type SidebarFact, type SidebarSection } from '../components/shell/Sidebar'
 import { Card, SURFACE_CLASS } from '../components/ui/Card'
 import { Legend } from '../components/ui/Legend'
 import { Observation } from '../components/ui/Observation'
@@ -78,22 +78,33 @@ export function Dashboard({ username }: DashboardProps) {
     : null
   const updated = Math.max(day.dataUpdatedAt, accuracy.dataUpdatedAt, accuracyAll.dataUpdatedAt)
 
-  const filterControls = (
-    <>
-      <DeliveryDatePicker
-        value={date}
-        min={min ?? '2026-01-02'}
-        max={max ?? '2026-02-01'}
-        onChange={(next) => setFilters({ date: next })}
-      />
-      <HourSelect value={filters.hour} onChange={(hour) => setFilters({ hour })} />
-      <WindowToggle
-        value={filters.window}
-        options={meta.data?.windowsDays ?? WINDOW_OPTIONS}
-        onChange={(window) => setFilters({ window })}
-      />
-    </>
-  )
+  const sections: SidebarSection[] = [
+    {
+      title: 'Delivery',
+      content: (
+        <>
+          <DeliveryDatePicker
+            value={date}
+            min={min ?? '2026-01-02'}
+            max={max ?? '2026-02-01'}
+            onChange={(next) => setFilters({ date: next })}
+          />
+          <HourSelect value={filters.hour} onChange={(hour) => setFilters({ hour })} />
+        </>
+      ),
+    },
+    {
+      title: 'Error history',
+      hint: 'max 30 days',
+      content: (
+        <WindowToggle
+          value={filters.window}
+          options={meta.data?.windowsDays ?? WINDOW_OPTIONS}
+          onChange={(window) => setFilters({ window })}
+        />
+      ),
+    },
+  ]
 
   const facts: SidebarFact[] | null = day.data
     ? [
@@ -108,13 +119,7 @@ export function Dashboard({ username }: DashboardProps) {
 
   return (
     <div className="min-h-screen lg:flex">
-      <Sidebar
-        filters={filterControls}
-        facts={facts}
-        footer={<AppFooter updatedAt={updatedAt} stacked />}
-        username={username}
-        onSignOut={clearSession}
-      />
+      <Sidebar sections={sections} facts={facts} username={username} onSignOut={clearSession} />
 
       <div className="min-w-0 flex-1">
         <AppHeader deliveryLabel={formatCalendarDateLong(date)} decisionLabel={decisionLabel} />
@@ -151,9 +156,7 @@ export function Dashboard({ username }: DashboardProps) {
               </>
             )}
 
-            <div className="lg:hidden">
-              <AppFooter updatedAt={updatedAt} />
-            </div>
+            <AppFooter updatedAt={updatedAt} />
           </div>
         </main>
       </div>
