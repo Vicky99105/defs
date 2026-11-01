@@ -9,7 +9,11 @@ All data is fetched live from the Elexon BMRS API. There is no database.
 
 **Live app:** https://wind-desk-one.vercel.app (API: https://wind-desk-api-theta.vercel.app/api/meta)
 
-**Sign-in:** the app and its data endpoints sit behind a username and password. Reviewer credentials are supplied with the submission, not in this repo.
+**Sign-in:** the app and its data endpoints sit behind a username and password. Use this reviewer account on the live app:
+
+| Username | Password |
+|---|---|
+| `reviewer` | `NC9jwO8pJvZnN_BZ` |
 
 ## The screen
 
